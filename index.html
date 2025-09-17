@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freepik Image Downloader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .card-body {
+            padding: 2.5rem;
+        }
+
+        .form-control {
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn {
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #20c997);
+            border: none;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .alert {
+            border-radius: 15px;
+            border: none;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar {
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .download-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .download-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .download-item.completed {
+            border-left-color: var(--success-color);
+        }
+
+        .download-item.failed {
+            border-left-color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-container">
+        <div class="row justify-content-center w-100">
+            <div class="col-lg-8 col-md-10">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <h1 class="mb-0">
+                            <i class="fas fa-download me-3"></i>
+                            Freepik Image Downloader
+                        </h1>
+                        <p class="mb-0 mt-2 opacity-75">Download premium images with ease</p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Alert Messages -->
+                        <div id="alertContainer"></div>
+
+                        <!-- URL Input Form -->
+                        <form id="urlForm" class="mb-4">
+                            <div class="mb-4">
+                                <label for="urlInput" class="form-label fw-bold">
+                                    <i class="fas fa-link me-2"></i>Freepik Image URL
+                                </label>
+                                <div class="input-group">
+                                    <input type="url" 
+                                           class="form-control" 
+                                           id="urlInput" 
+                                           name="url" 
+                                           placeholder="https://www.freepik.com/free-photo/..." 
+                                           required>
+                                    <button class="btn btn-primary" type="submit" id="submitBtn">
+                                        <i class="fas fa-plus me-2"></i>Add to Queue
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Paste the complete Freepik image URL here
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Status Section -->
+                        <div id="statusSection" style="display: none;">
+                            <div class="status-card">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-clock me-2"></i>Download Status
+                                    </h5>
+                                    <span class="badge bg-primary" id="statusBadge">Processing</span>
+                                </div>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" 
+                                         style="width: 0%" 
+                                         id="progressBar"></div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <small class="text-muted" id="statusText">Initializing...</small>
+                                    <button class="btn btn-success btn-sm" 
+                                            id="downloadBtn" 
+                                            style="display: none;">
+                                        <i class="fas fa-download me-2"></i>Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Download History -->
+                        <div class="mt-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-history me-2"></i>Recent Downloads
+                            </h5>
+                            <div id="downloadHistory" class="download-history">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-3"></i>
+                                    <p>No downloads yet. Add a URL to get started!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics -->
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="h3 text-primary mb-1" id="totalDownloads">0</div>
+                                    <small class="text-muted">Total Downloads</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="h3 text-success mb-1" id="successfulDownloads">0</div>
+                                    <small class="text-muted">Successful</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="h3 text-warning mb-1" id="pendingDownloads">0</div>
+                                    <small class="text-muted">Pending</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden download link -->
+    <a id="hiddenDownload" style="display: none;"></a>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let currentUrlCode = null;
+        let statusCheckInterval = null;
+        let downloadHistory = [];
+
+        // Show alert function
+        function showAlert(message, type = 'info') {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${getAlertIcon(type)} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('#alertContainer').html(alertHtml);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+
+        function getAlertIcon(type) {
+            const icons = {
+                'success': 'check-circle',
+                'danger': 'exclamation-triangle',
+                'warning': 'exclamation-circle',
+                'info': 'info-circle'
+            };
+            return icons[type] || 'info-circle';
+        }
+
+        // Update progress
+        function updateProgress(percentage, text, badgeText = 'Processing') {
+            $('#progressBar').css('width', percentage + '%');
+            $('#statusText').text(text);
+            $('#statusBadge').text(badgeText).removeClass().addClass('badge bg-primary');
+            
+            if (percentage === 100) {
+                $('#statusBadge').removeClass('bg-primary').addClass('bg-success').text('Completed');
+            }
+        }
+
+        // Add to download history
+        function addToHistory(url, filename, status) {
+            const historyItem = {
+                url: url,
+                filename: filename,
+                status: status,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            downloadHistory.unshift(historyItem);
+            updateHistoryDisplay();
+            updateStatistics();
+        }
+
+        // Update history display
+        function updateHistoryDisplay() {
+            if (downloadHistory.length === 0) return;
+            
+            let historyHtml = '';
+            downloadHistory.slice(0, 5).forEach(item => {
+                const statusClass = item.status === 'completed' ? 'completed' : 
+                                  item.status === 'failed' ? 'failed' : '';
+                const statusIcon = item.status === 'completed' ? 'check-circle text-success' : 
+                                 item.status === 'failed' ? 'times-circle text-danger' : 
+                                 'clock text-warning';
+                
+                historyHtml += `
+                    <div class="download-item ${statusClass}">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">${item.filename || 'Unknown'}</div>
+                                <small class="text-muted">${item.timestamp}</small>
+                            </div>
+                            <i class="fas fa-${statusIcon} fa-lg"></i>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            $('#downloadHistory').html(historyHtml);
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const total = downloadHistory.length;
+            const successful = downloadHistory.filter(item => item.status === 'completed').length;
+            const pending = downloadHistory.filter(item => item.status === 'pending').length;
+            
+            $('#totalDownloads').text(total);
+            $('#successfulDownloads').text(successful);
+            $('#pendingDownloads').text(pending);
+        }
+
+        // Form submission
+        $('#urlForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = $('#submitBtn');
+            const originalText = submitBtn.html();
+            
+            // Show loading state
+            submitBtn.html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...').prop('disabled', true);
+            
+            $.post('api/submit.php', $(this).serialize())
+                .done(function(response) {
+                    if (response.success && response.url_code) {
+                        currentUrlCode = response.url_code;
+                        showAlert('URL added to download queue successfully!', 'success');
+                        $('#statusSection').show();
+                        $('#urlInput').val('');
+                        
+                        // Add to history
+                        addToHistory(response.url, response.filename, 'pending');
+                        
+                        // Start status checking
+                        startStatusCheck();
+                        
+                        // Update progress
+                        updateProgress(25, 'Added to queue, waiting for processing...', 'Queued');
+                    } else {
+                        showAlert(response.message || 'Error processing URL', 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('Network error. Please try again.', 'danger');
+                })
+                .always(function() {
+                    submitBtn.html(originalText).prop('disabled', false);
+                });
+        });
+
+        // Status checking
+        function startStatusCheck() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            
+            statusCheckInterval = setInterval(function() {
+                if (!currentUrlCode) return;
+                
+                $.get('api/status.php', { url_code: currentUrlCode })
+                    .done(function(response) {
+                        if (response.success) {
+                            const status = response.data.status;
+                            const download = response.data.download;
+                            
+                            if (status == 1 && download == 0) {
+                                updateProgress(75, 'Processing download...', 'Processing');
+                            } else if (download == 1) {
+                                updateProgress(100, 'Download ready!', 'Completed');
+                                $('#downloadBtn').show().off('click').on('click', function() {
+                                    downloadFile();
+                                });
+                                
+                                // Update history
+                                if (downloadHistory.length > 0) {
+                                    downloadHistory[0].status = 'completed';
+                                    updateHistoryDisplay();
+                                    updateStatistics();
+                                }
+                                
+                                clearInterval(statusCheckInterval);
+                                showAlert('Your download is ready!', 'success');
+                            }
+                        }
+                    })
+                    .fail(function() {
+                        console.log('Status check failed');
+                    });
+            }, 3000);
+        }
+
+        // Download file
+        function downloadFile() {
+            if (!currentUrlCode) return;
+            
+            const downloadUrl = `api/download.php?url_code=${currentUrlCode}`;
+            $('#hiddenDownload').attr('href', downloadUrl).attr('download', '')[0].click();
+            
+            showAlert('Download started!', 'success');
+            
+            // Reset for next download
+            setTimeout(() => {
+                $('#statusSection').hide();
+                currentUrlCode = null;
+                updateProgress(0, 'Ready for next download', 'Ready');
+            }, 2000);
+        }
+
+        // Initialize
+        $(document).ready(function() {
+            updateStatistics();
+        });
+    </script>
+</body>
+</html>
