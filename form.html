@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enter URL</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<form id="urlForm">
+    <input type="url" name="url" id="urlInput" placeholder="Enter URL" required style="width:300px;">
+    <button type="submit">Save URL</button>
+</form>
+<button id="downloadBtn" style="display:none;" disabled>Download Image</button>
+<a id="hiddenDownload" style="display:none;"></a>
+
+<script>
+    let urlCode = null;
+    $('#urlForm').on('submit', function (e) {
+        e.preventDefault();
+        $.post('submit.php', $(this).serialize(), function (response) {
+            if (response.url_code) {
+                urlCode = response.url_code;
+                alert('URL saved!');
+                checkStatus();
+            } else {
+                alert('Error: ' + (response.error || 'Unknown error'));
+            }
+        }, 'json');
+    });
+
+    function checkStatus() {
+        if (!urlCode) return;
+        setInterval(function () {
+            $.get('status.php', {url_code: urlCode}, function (resp) {
+                if (resp.download == 1) {
+                    $('#downloadBtn').show().prop('disabled', false);
+                    $('#downloadBtn').off('click').on('click', function () {
+                        const fileUrl = 'download.php?url_code=' + urlCode;
+                        $('#hiddenDownload')
+                            .attr('href', fileUrl)
+                            .attr('download', '') // Optionally set a filename
+                            [0].click();
+                    });
+                }
+            }, 'json');
+        }, 5000);
+    }
+</script>
+</body>
+</html>
